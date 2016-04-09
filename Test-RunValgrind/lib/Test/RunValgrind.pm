@@ -134,8 +134,6 @@ An array reference contains strings with command line arguments to the executabl
 
 =back
 
-=cut
-
 See the synopsis for an example.
 
 =cut
