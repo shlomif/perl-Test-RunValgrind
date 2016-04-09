@@ -1,0 +1,24 @@
+=encoding utf8
+
+=head1 Test-RunValgrind
+
+valgrind is an open source and convenient memory debugger that runs on some
+platforms. This module runs valgrind (L<http://en.wikipedia.org/wiki/Valgrind>)
+on an executable and makes sure that valgrind did not find any faults in it.
+
+Licence is MIT/X11.
+
+For more information, see:
+
+=over 4
+
+=item * L<http://metacpan.org/release/Test-RunValgrind>
+
+=back
+
+=head1 BUILDING
+
+To build and test from the git repository, you need Dist Zilla
+(L<http://dzil.org>).
+
+=cut
