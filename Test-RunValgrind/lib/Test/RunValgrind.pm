@@ -93,8 +93,9 @@ Test::RunValgrind - tests that an external program is valgrind-clean.
 
 =head1 DESCRIPTION
 
-This module runs valgrind (L<http://en.wikipedia.org/wiki/Valgrind>) on
-an executable and makes sure that valgrind did not find any faults in it.
+valgrind is an open source and convenient memory debugger that runs on some
+platforms. This module runs valgrind (L<http://en.wikipedia.org/wiki/Valgrind>)
+on an executable and makes sure that valgrind did not find any faults in it.
 
 It originated from some code used to test the Freecell Solver executables
 using valgrind, and was extracted into its own CPAN module to allow for
@@ -135,5 +136,16 @@ An array reference contains strings with command line arguments to the executabl
 =back
 
 See the synopsis for an example.
+
+=head1 SEE ALSO
+
+L<Test::Valgrind> - seems to be only for running perl itself under valgrind.
+
+L<Devel::Valgrind::Client>
+
+L<http://en.wikipedia.org/wiki/Valgrind> - wikipedia page.
+
+L<http://github.com/shlomif/fc-solve/blob/master/fc-solve/source/t/t/lib/FC_Solve/Test/Valgrind.pm>
+- original code using Test::RunValgrind in Freecell Solver
 
 =cut
