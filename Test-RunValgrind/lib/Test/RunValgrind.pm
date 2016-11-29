@@ -3,7 +3,7 @@ package Test::RunValgrind;
 use strict;
 use warnings;
 
-our $VERSION = '0.0.1';
+our $VERSION = 'v0.0.1';
 
 use Test::More;
 use Path::Tiny qw/path/;
