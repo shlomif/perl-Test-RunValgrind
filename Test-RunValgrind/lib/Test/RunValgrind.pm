@@ -3,10 +3,13 @@ package Test::RunValgrind;
 use strict;
 use warnings;
 
-our $VERSION = 'v0.0.1';
+use 5.014;
 
 use Test::More;
 use Path::Tiny qw/path/;
+
+use Test::Trap
+    qw( trap $trap :flow:stderr(systemsafe):stdout(systemsafe):warn );
 
 use Carp;
 
@@ -21,9 +24,23 @@ sub new
     return $self;
 }
 
+sub _supress_stderr
+{
+    my $self = shift;
+
+    if (@_)
+    {
+        $self->{_supress_stderr} = shift;
+    }
+
+    return $self->{_supress_stderr};
+}
+
 sub _init
 {
-    my ($self, $args) = @_;
+    my ( $self, $args ) = @_;
+
+    $self->_supress_stderr( $args->{supress_stderr} // 0 );
 
     return;
 }
@@ -32,7 +49,7 @@ sub run
 {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    my ($self, $args) = @_;
+    my ( $self, $args ) = @_;
 
     my $blurb = $args->{blurb}
         or Carp::confess("blurb not specified.");
@@ -46,22 +63,25 @@ sub run
     my $argv = $args->{argv}
         or Carp::confess("argv not specified.");
 
-    system(
-        "valgrind",
-        "--track-origins=yes",
-        "--leak-check=yes",
-        "--log-file=$log_fn",
-        $prog,
-        @$argv,
-    );
+    trap
+    {
 
-    my $out_text = path( $log_fn )->slurp_utf8;
-    my $ret = Test::More::ok (
-        (index($out_text, q{ERROR SUMMARY: 0 errors from 0 contexts}) >= 0)
-        &&
-        (index($out_text, q{in use at exit: 0 bytes}) >= 0)
-        , $blurb
-    );
+        system( "valgrind", "--track-origins=yes", "--leak-check=yes",
+            "--log-file=$log_fn", $prog, @$argv, );
+    };
+
+    STDOUT->print( $trap->stdout );
+    my $out_text = path($log_fn)->slurp_utf8;
+    my $VERDICT =
+        (
+        ( index( $out_text, q{ERROR SUMMARY: 0 errors from 0 contexts} ) >= 0 )
+            && ( index( $out_text, q{in use at exit: 0 bytes} ) >= 0 ) );
+
+    if ( ( !$VERDICT ) and ( !$self->_supress_stderr ) )
+    {
+        STDERR->print( $trap->stderr );
+    }
+    my $ret = Test::More::ok( $VERDICT, $blurb );
     if ($ret)
     {
         unlink($log_fn);
@@ -106,8 +126,9 @@ reuse by other projects, including fortune-mod
 
 =head2 my $obj = Test::RunValgrind->new({})
 
-The constructor - currently accepts a single hash reference and does not use
-any of its keys.
+The constructor - currently accepts a single hash reference and if
+its C<'supress_stderr'> key's value is true, supresses outputting STDERR if
+on successful subsequent tests (starting from version 0.0.2).
 
 =head2 $obj->run({ ... })
 
