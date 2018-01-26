@@ -48,12 +48,25 @@ sub _ignore_leaks
     return $self->{_ignore_leaks};
 }
 
+sub _valgrind_args
+{
+    my $self = shift;
+
+    if (@_)
+    {
+        $self->{_valgrind_args} = shift;
+    }
+
+    return $self->{_valgrind_args};
+}
+
 sub _init
 {
     my ( $self, $args ) = @_;
 
     $self->_supress_stderr( $args->{supress_stderr} // 0 );
     $self->_ignore_leaks( $args->{ignore_leaks} // 0 );
+    $self->_valgrind_args( $args->{valgrind_args} // 0 );
 
     return;
 }
@@ -92,9 +105,15 @@ sub run
     trap
     {
 
-        system( "valgrind", "--track-origins=yes",
+        system(
+            "valgrind",
+            "--track-origins=yes",
             ( $self->_ignore_leaks ? () : ("--leak-check=yes") ),
-            "--log-file=$log_fn", $prog, @$argv, );
+            "--log-file=$log_fn",
+            ( $self->_valgrind_args ? @{ $self->_valgrind_args } : () ),
+            $prog,
+            @$argv,
+        );
     };
 
     STDOUT->print( $trap->stdout );
@@ -157,6 +176,11 @@ Furthermore if C<'ignore_leaks'> is true, then reported memory leaks are
 ignored and their presence will still allow the tests to pass (starting from
 version 0.2.0, and see L<https://rt.cpan.org/Public/Bug/Display.html?id=119988>
 ).
+
+C<'valgrind_args'> may point to an array reference of extra command line
+arguments to valgrind.
+See L<https://github.com/shlomif/perl-Test-RunValgrind/issues/4> ; since
+version 0.2.0.
 
 =head2 $obj->run({ ... })
 
