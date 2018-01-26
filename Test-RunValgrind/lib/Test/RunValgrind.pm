@@ -36,11 +36,24 @@ sub _supress_stderr
     return $self->{_supress_stderr};
 }
 
+sub _ignore_leaks
+{
+    my $self = shift;
+
+    if (@_)
+    {
+        $self->{_ignore_leaks} = shift;
+    }
+
+    return $self->{_ignore_leaks};
+}
+
 sub _init
 {
     my ( $self, $args ) = @_;
 
     $self->_supress_stderr( $args->{supress_stderr} // 0 );
+    $self->_ignore_leaks( $args->{ignore_leaks} // 0 );
 
     return;
 }
@@ -53,7 +66,8 @@ sub _calc_verdict
         (
             index( $$out_text, q{ERROR SUMMARY: 0 errors from 0 contexts} ) >= 0
         )
-            && ( index( $$out_text, q{in use at exit: 0 bytes} ) >= 0 )
+            && ( $self->_ignore_leaks
+            || ( index( $$out_text, q{in use at exit: 0 bytes} ) >= 0 ) )
     );
 }
 
@@ -78,7 +92,8 @@ sub run
     trap
     {
 
-        system( "valgrind", "--track-origins=yes", "--leak-check=yes",
+        system( "valgrind", "--track-origins=yes",
+            ( $self->_ignore_leaks ? () : ("--leak-check=yes") ),
             "--log-file=$log_fn", $prog, @$argv, );
     };
 
@@ -138,6 +153,10 @@ reuse by other projects, including fortune-mod
 The constructor - currently accepts a single hash reference and if
 its C<'supress_stderr'> key's value is true, supresses outputting STDERR if
 on successful subsequent tests (starting from version 0.0.2).
+Furthermore if C<'ignore_leaks'> is true, then reported memory leaks are
+ignored and their presence will still allow the tests to pass (starting from
+version 0.2.0, and see L<https://rt.cpan.org/Public/Bug/Display.html?id=119988>
+).
 
 =head2 $obj->run({ ... })
 
