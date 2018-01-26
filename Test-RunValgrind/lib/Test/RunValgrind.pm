@@ -45,6 +45,18 @@ sub _init
     return;
 }
 
+sub _calc_verdict
+{
+    my ( $self, $out_text ) = @_;
+
+    return (
+        (
+            index( $$out_text, q{ERROR SUMMARY: 0 errors from 0 contexts} ) >= 0
+        )
+            && ( index( $$out_text, q{in use at exit: 0 bytes} ) >= 0 )
+    );
+}
+
 sub run
 {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
@@ -72,10 +84,7 @@ sub run
 
     STDOUT->print( $trap->stdout );
     my $out_text = path($log_fn)->slurp_utf8;
-    my $VERDICT =
-        (
-        ( index( $out_text, q{ERROR SUMMARY: 0 errors from 0 contexts} ) >= 0 )
-            && ( index( $out_text, q{in use at exit: 0 bytes} ) >= 0 ) );
+    my $VERDICT  = $self->_calc_verdict( \$out_text );
 
     if ( ( !$VERDICT ) and ( !$self->_supress_stderr ) )
     {
