@@ -65,8 +65,8 @@ sub _init
     my ( $self, $args ) = @_;
 
     $self->_supress_stderr( $args->{supress_stderr} // 0 );
-    $self->_ignore_leaks( $args->{ignore_leaks} // 0 );
-    $self->_valgrind_args( $args->{valgrind_args} // 0 );
+    $self->_ignore_leaks( $args->{ignore_leaks}     // 0 );
+    $self->_valgrind_args( $args->{valgrind_args}   // 0 );
 
     return;
 }
